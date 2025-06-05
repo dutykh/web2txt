@@ -6,6 +6,7 @@ This script fetches textual content from a given URL and saves it to a text file
 It provides robust error handling, progress indication, and user-friendly interface.
 
 Author: Dr. Denys Dutykh (Khalifa University of Science and Technology, Abu Dhabi, UAE)
+Repository: https://github.com/dutykh/web2txt
 License: GNU Lesser General Public License v3.0 (LGPL3)
 """
 

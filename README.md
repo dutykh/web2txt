@@ -1,6 +1,8 @@
 # Web2TXT - Webpage Text Extraction Tool
 
-**Author:** Dr. Denys Dutykh (Khalifa University of Science and Technology, Abu Dhabi, UAE)
+**Author:** Dr. Denys Dutykh (Khalifa University of Science and Technology, Abu Dhabi, UAE)  
+**Repository:** [https://github.com/dutykh/web2txt](https://github.com/dutykh/web2txt)  
+**License:** GNU Lesser General Public License v3.0 (LGPL3)
 
 A robust Python 3 script that fetches textual content from any webpage and saves it to a clean text file. This tool is designed for researchers, developers, and data analysts who need to extract readable content from web pages for further processing, analysis, or feeding to Large Language Models (LLMs).
 
@@ -40,10 +42,10 @@ The script requires the following packages (automatically installable via `requi
 1. **Clone or download the script:**
    ```bash
    # If using git
-   git clone <repository-url>
+   git clone https://github.com/dutykh/web2txt.git
    cd web2txt
    
-   # Or download web2txt.py directly
+   # Or download web2txt.py directly from https://github.com/dutykh/web2txt
    ```
 
 2. **Install dependencies:**
