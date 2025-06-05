@@ -1,0 +1,6 @@
+# Dependencies for web2txt.py
+# Author: Dr. Denys Dutykh (Khalifa University of Science and Technology, Abu Dhabi, UAE)
+
+requests>=2.25.1
+beautifulsoup4>=4.9.3
+tqdm>=4.62.0 
