@@ -1,0 +1,28 @@
+# Dr. Denys Dutykh (Mathematics Department, Khalifa University of Science and Technology, Abu Dhabi, UAE)
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "web2txt: the text of a web page in a plain text file"
+type: software
+authors:
+  - family-names: Dutykh
+    given-names: Denys
+    affiliation: "Khalifa University of Science and Technology"
+    orcid: "https://orcid.org/0000-0001-5247-2788"
+repository-code: "https://github.com/dutykh/web2txt"
+license: LGPL-3.0-only
+version: 1.0.0
+date-released: "2026-11-15"
+keywords:
+  - python
+  - cli
+  - web-scraping
+  - text-extraction
+  - html-to-text
+  - beautifulsoup
+  - llm
+abstract: >-
+  Python script that downloads one web page and writes its human-readable text into a UTF-8 text
+  file, for offline reading, search, a text corpus or a large language model. It removes the
+  scripts and style sheets, decodes the HTML entities and reduces line breaks and runs of blanks to
+  single spaces, names the output file after the address when no name is given, and reports
+  network and file errors in one line with a non-zero exit status.

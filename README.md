@@ -1,194 +1,78 @@
-# Web2TXT - Webpage Text Extraction Tool
+<!-- Author: Dr. Denys Dutykh (Mathematics Department, Khalifa University of Science and Technology, Abu Dhabi, UAE) -->
 
-**Author:** Dr. Denys Dutykh (Khalifa University of Science and Technology, Abu Dhabi, UAE)  
-**Repository:** [https://github.com/dutykh/web2txt](https://github.com/dutykh/web2txt)  
-**License:** GNU Lesser General Public License v3.0 (LGPL3)
+# web2txt: the text of a web page in a plain text file
 
-A robust Python 3 script that fetches textual content from any webpage and saves it to a clean text file. This tool is designed for researchers, developers, and data analysts who need to extract readable content from web pages for further processing, analysis, or feeding to Large Language Models (LLMs).
+The script `web2txt.py` downloads one web page and writes its human-readable text into a UTF-8 text file, ready to be read offline, searched, gathered into a corpus, or given to a large language model. It removes the scripts and the style sheets of the page, keeps all its other text (the title of the page included), decodes the HTML entities, and reduces the line breaks and runs of blanks to single spaces, so that the file holds the whole text of the page on one line.
 
-## 🚀 Features
+The repository is at
 
-### Core Functionality
-- **URL-to-Text Conversion**: Extracts all human-readable text from any webpage
-- **Smart HTML Parsing**: Removes scripts, styles, and HTML tags while preserving logical text structure
-- **Intelligent Text Cleaning**: Handles whitespace normalization and HTML entity decoding
-- **Flexible Output**: Supports custom output filenames or auto-generates meaningful names from URLs
+https://github.com/dutykh/web2txt
 
-### User Experience
-- **Progress Indication**: Real-time download progress bars using `tqdm`
-- **Comprehensive Error Handling**: Clear error messages for network issues, file I/O problems, and invalid URLs
-- **Automatic URL Validation**: Adds missing protocols and validates URL structure
-- **UTF-8 Encoding Support**: Handles various character encodings with fallback mechanisms
+## Quick start
 
-### Robustness
-- **Network Resilience**: 15-second timeout with detailed error reporting for various HTTP status codes
-- **File Safety**: Secure filename generation from URLs with character sanitization
-- **Cross-Platform**: Works on Linux, macOS, and Windows with Python 3.7+
-
-## 📋 Requirements
-
-### System Requirements
-- Python 3.7 or higher
-- Internet connection for webpage fetching
-
-### Python Dependencies
-The script requires the following packages (automatically installable via `requirements.txt`):
-- `requests` (≥2.25.1) - For HTTP requests and webpage fetching
-- `beautifulsoup4` (≥4.9.3) - For HTML parsing and text extraction
-- `tqdm` (≥4.62.0) - For progress bars and user feedback
-
-## 🛠️ Installation
-
-1. **Clone or download the script:**
-   ```bash
-   # If using git
-   git clone https://github.com/dutykh/web2txt.git
-   cd web2txt
-   
-   # Or download web2txt.py directly from https://github.com/dutykh/web2txt
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Make the script executable (optional):**
-   ```bash
-   chmod +x web2txt.py
-   ```
-
-## 📖 Usage
-
-### Basic Syntax
 ```bash
-python3 web2txt.py <URL> [output_filename.txt]
-```
-
-### Parameters
-- `<URL>`: **Required** - The webpage URL to extract text from
-- `[output_filename.txt]`: **Optional** - Custom output filename
-
-### Usage Examples
-
-#### 1. Basic Usage with Auto-Generated Filename
-```bash
+git clone https://github.com/dutykh/web2txt.git
+cd web2txt
+python3 -m venv .venv && . .venv/bin/activate
+python3 -m pip install -r requirements.txt
 python3 web2txt.py "https://www.example.com"
 ```
-**Output:** Creates `www_example_com_content.txt`
 
-#### 2. Custom Output Filename
+The virtual environment keeps the three packages apart from the Python of the system, which recent Ubuntu and Debian releases protect from `pip`; in a new terminal, `. .venv/bin/activate` brings it back. The last command writes the text of the page into `www_example_com_content.txt`, in the current folder. A second argument names the output file instead, and an address given without its protocol is fetched over `https://`:
+
 ```bash
-python3 web2txt.py "https://news.ycombinator.com" "hackernews_frontpage.txt"
+python3 web2txt.py "https://news.ycombinator.com" hackernews_frontpage.txt
+python3 web2txt.py "wikipedia.org/wiki/Python" python_wiki.txt
 ```
-**Output:** Creates `hackernews_frontpage.txt`
 
-#### 3. URL Without Protocol (Automatically Adds HTTPS)
-```bash
-python3 web2txt.py "wikipedia.org/wiki/Python" "python_wiki.txt"
+## Usage
+
+```text
+python3 web2txt.py URL [OUTPUT.txt]
 ```
-**Output:** Fetches from `https://wikipedia.org/wiki/Python` and saves to `python_wiki.txt`
 
-#### 4. Complex URL with Parameters
-```bash
-python3 web2txt.py "https://stackoverflow.com/questions/tagged/python?sort=votes"
-```
-**Output:** Creates `stackoverflow_com_questions_tagged_python_sort_votes_content.txt`
+Without a second argument, the name of the output file is made from the address: the protocol is removed, every character other than a letter, a digit, a hyphen or an underscore becomes an underscore, repeated underscores are merged, the result is cut at 100 characters, and `_content.txt` is appended. An existing file of the same name is overwritten.
 
-## 🔧 How It Works
+| Command | File written |
+| --- | --- |
+| `python3 web2txt.py "https://www.example.com"` | `www_example_com_content.txt` |
+| `python3 web2txt.py "https://stackoverflow.com/questions/tagged/python?sort=votes"` | `stackoverflow_com_questions_tagged_python_sort_votes_content.txt` |
+| `python3 web2txt.py "https://news.ycombinator.com" hackernews_frontpage.txt` | `hackernews_frontpage.txt` |
 
-### 1. URL Validation and Normalization
-- Validates URL format and structure
-- Automatically adds `https://` protocol if missing
-- Handles various URL edge cases
+The script can also be made executable (`chmod +x web2txt.py`) and run as `./web2txt.py URL`.
 
-### 2. Content Fetching
-- Makes HTTP request with 15-second timeout
-- Streams content with real-time progress indication
-- Handles various HTTP status codes (404, 500, etc.)
-- Manages encoding detection and Unicode decoding
+## How it works
 
-### 3. HTML Processing
-- Parses HTML using BeautifulSoup4
-- Removes `<script>` and `<style>` elements
-- Extracts text while preserving logical spacing
-- Decodes HTML entities to readable characters
+The page is requested with a timeout of 15 seconds and downloaded in pieces of 8 KiB, with a progress bar drawn by `tqdm` (with the total size when the server announces it). The bytes are decoded with the character set that the `requests` library reports for the page, and with UTF-8, replacing the bytes it cannot read, when that decoding fails. Beautiful Soup parses the page with the HTML parser of the Python standard library; the `<script>` and `<style>` elements are removed, the remaining text is taken with a space between consecutive elements, and every line break and run of blanks is reduced to one space. A page without any readable text produces a warning and a file holding the sentence "No readable text content found."
 
-### 4. Text Cleaning
-- Normalizes whitespace and line breaks
-- Removes excessive spacing while preserving structure
-- Ensures clean, readable output
+Two limits follow from this design. The script reads the page that the server sends and runs none of its JavaScript, so the text of a page that builds its content in the browser is missing. A page whose server declares no character set is decoded as ISO-8859-1, the default that `requests` applies to text in that case, so that the accented letters of such a page written in UTF-8 come out garbled.
 
-### 5. File Output
-- Saves content in UTF-8 encoding
-- Handles file permission and I/O errors gracefully
-- Provides confirmation of successful saves
+## Messages and exit status
 
-## 📄 Output Format
+The script prints what it is doing (the address, the parsing, the saving) and ends with "Successfully saved text from URL to FILE." and the exit status 0. When something fails it prints one line and exits with the status 1; with the wrong number of arguments it prints its usage.
 
-The extracted text files contain:
-- **Clean, readable text** with logical spacing preserved
-- **No HTML tags, scripts, or styling information**
-- **Properly decoded special characters** and Unicode
-- **UTF-8 encoding** for universal compatibility
+| Situation | Message |
+| --- | --- |
+| The page does not exist | `Error: Could not retrieve content from URL. Reason: Not Found (404): URL` |
+| Another refusal of the server | `Error: Could not retrieve content from URL. Reason: Client Error (403): URL`, with the status received |
+| An error of the server | `Error: Could not retrieve content from URL. Reason: Server Error (500): URL`, with the status received |
+| No answer within 15 seconds | `Error: Could not retrieve content from URL. Reason: Timeout: Could not connect to URL` |
+| No connection | `Error: Could not retrieve content from URL. Reason: Connection Error: Could not connect to URL` |
+| The file cannot be written | `Error: Could not write to file FILE. Reason: Permission denied: Cannot write to FILE` |
+| An address without a host | `Error: Invalid URL. Invalid URL format: URL` |
 
-## ⚠️ Error Handling
+## Requirements
 
-The script provides detailed error messages for common issues:
+Python 3.7 or newer, with the three packages listed in `requirements.txt`: `requests` (version 2.25.1 or newer) for the download, `beautifulsoup4` (version 4.9.3 or newer) for the parsing, and `tqdm` (version 4.62.0 or newer) for the progress bar. The script itself is the single file `web2txt.py`.
 
-### Network Errors
-- **404 Not Found**: "Error: Could not retrieve content from [URL]. Reason: Not Found (404)"
-- **Server Errors**: "Error: Could not retrieve content from [URL]. Reason: Server Error (500)"
-- **Timeout**: "Error: Could not retrieve content from [URL]. Reason: Timeout"
-- **Connection Issues**: "Error: Could not retrieve content from [URL]. Reason: Connection Error"
+## How to cite
 
-### File I/O Errors
-- **Permission Denied**: "Error: Could not write to file [filename]. Reason: Permission denied"
-- **Invalid Path**: "Error: Could not write to file [filename]. Reason: File system error"
+The file [`CITATION.cff`](CITATION.cff) describes the script for citation, and GitHub turns it into a reference, in APA or BibTeX, through the "Cite this repository" button of the repository page.
 
-### URL Errors
-- **Invalid Format**: "Error: Invalid URL. Invalid URL format: [URL]"
-- **Empty URL**: "Error: Invalid URL. URL cannot be empty"
+## Licence
 
-## 🎯 Use Cases
+The script is free software under the GNU Lesser General Public License, version 3 (`LGPL-3.0-only`), as its header states. The file [LICENSE](LICENSE) holds the text of that licence, and the file [COPYING](COPYING) the text of the GNU General Public License, version 3, on which the Lesser General Public License builds.
 
-### Academic Research
-- Extracting content from research papers and articles
-- Gathering text data for linguistic analysis
-- Creating datasets from web sources
+## Author
 
-### Data Science & AI
-- Preparing web content for LLM training or fine-tuning
-- Creating text corpora from online sources
-- Web scraping for sentiment analysis or NLP tasks
-
-### Content Analysis
-- Archiving webpage content in readable format
-- Preparing web articles for offline reading
-- Converting web content for accessibility tools
-
-### Development & Testing
-- Creating test datasets from web sources
-- Extracting documentation from web pages
-- Preparing content for text processing algorithms
-
-## 🔒 Technical Specifications
-
-- **Language**: Python 3.7+
-- **Architecture**: Modular design with separate functions for each major task
-- **Error Handling**: Comprehensive exception handling with graceful degradation
-- **Performance**: Efficient streaming download with progress indication
-- **Encoding**: Robust UTF-8 handling with fallback mechanisms
-- **Code Style**: PEP 8 compliant with comprehensive documentation
-
-## 👨‍💼 About the Author
-
-**Dr. Denys Dutykh** is affiliated with Khalifa University of Science and Technology in Abu Dhabi, UAE. This tool was developed to facilitate web content extraction for research and data analysis purposes, providing a reliable and user-friendly solution for converting web pages into clean, processable text format.
-
-## 📝 License
-
-This project is licensed under the GNU Lesser General Public License v3.0 (LGPL3). See the LICENSE file for full license terms.
-
-## 🤝 Contributing
-
-Contributions, bug reports, and feature requests are welcome. Please ensure any modifications maintain the robust error handling and user-friendly interface that characterize this tool.
+Dr. Denys Dutykh, Mathematics Department, Khalifa University of Science and Technology, Abu Dhabi, United Arab Emirates (https://www.denys-dutykh.com/). Bug reports and suggestions are welcome through the issues of the repository.
