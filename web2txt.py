@@ -10,12 +10,20 @@ Repository: https://github.com/dutykh/web2txt
 License: GNU Lesser General Public License v3.0 (LGPL3)
 """
 
+import codecs
 import sys
 import re
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 from urllib.parse import urlparse
+
+# The charset parameter of a Content-Type header, and the character set that a
+# page declares in a <meta charset="..."> or <meta http-equiv="Content-Type"
+# content="text/html; charset=..."> element.
+CHARSET_IN_HEADER = re.compile(r'charset\s*=\s*["\']?([^"\';,\s]+)', re.IGNORECASE)
+CHARSET_IN_META = re.compile(rb'<meta\b[^>]*?charset\s*=\s*["\']?\s*([A-Za-z0-9._:-]+)', re.IGNORECASE)
+META_SEARCH_BYTES = 16384
 
 def print_usage():
     """Print usage information and exit."""
@@ -53,6 +61,52 @@ def sanitize_filename(url):
         clean_url = clean_url[:max_length]
     
     return f"{clean_url}_content.txt"
+
+
+def decode_page(content, content_type):
+    """
+    Decode the bytes of a webpage into text.
+
+    The character set is the one that the server declares in its Content-Type
+    header; without one, the one that the page declares in a <meta> element of
+    its first 16 KiB; without either, UTF-8 when the bytes are valid UTF-8.
+    A declared character set that is unknown or does not decode the bytes is
+    passed over for the next choice, and Windows-1252 decodes what remains.
+
+    Args:
+        content (bytes): The bytes of the page
+        content_type (str): The Content-Type header of the response, or ''
+
+    Returns:
+        tuple: The text of the page and a description of the character set used
+    """
+    candidates = []
+    match = CHARSET_IN_HEADER.search(content_type or '')
+    if match:
+        candidates.append((match.group(1), 'declared by the server'))
+    match = CHARSET_IN_META.search(content[:META_SEARCH_BYTES])
+    if match:
+        name = match.group(1).decode('ascii')
+        # A <meta> element readable as ASCII cannot be written in UTF-16, so a
+        # page that declares UTF-16 there is read as UTF-8, as browsers do.
+        if name.lower().replace('_', '-') in ('utf-16', 'utf-16le', 'utf-16be'):
+            name = 'utf-8'
+        candidates.append((name, 'declared by the page'))
+    candidates.append(('utf-8', 'detected'))
+
+    for name, origin in candidates:
+        try:
+            codec = codecs.lookup(name).name
+        except LookupError:
+            continue
+        try:
+            # utf-8-sig also removes a byte-order mark at the start of the page
+            text = content.decode('utf-8-sig' if codec == 'utf-8' else codec)
+        except UnicodeDecodeError:
+            continue
+        return text, f"{name.lower()} ({origin})"
+
+    return content.decode('cp1252', errors='replace'), "windows-1252 (assumed: not UTF-8, no usable declaration)"
 
 
 def fetch_webpage(url, timeout=15):
@@ -96,15 +150,11 @@ def fetch_webpage(url, timeout=15):
                         content += chunk
                         pbar.update(len(chunk))
         
-        # Decode content
-        try:
-            # Try to get encoding from headers
-            encoding = response.encoding or 'utf-8'
-            html_content = content.decode(encoding)
-        except UnicodeDecodeError:
-            # Fallback to utf-8 with error replacement
-            html_content = content.decode('utf-8', errors='replace')
-        
+        # Decode content: the charset of the HTTP header, else that of the
+        # page's <meta> element, else UTF-8 detection (see decode_page)
+        html_content, charset = decode_page(content, response.headers.get('Content-Type', ''))
+        print(f"Decoding as {charset}")
+
         return html_content
         
     except requests.exceptions.RequestException as e:

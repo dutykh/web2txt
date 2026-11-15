@@ -43,13 +43,13 @@ The script can also be made executable (`chmod +x web2txt.py`) and run as `./web
 
 ## How it works
 
-The page is requested with a timeout of 15 seconds and downloaded in pieces of 8 KiB, with a progress bar drawn by `tqdm` (with the total size when the server announces it). The bytes are decoded with the character set that the `requests` library reports for the page, and with UTF-8, replacing the bytes it cannot read, when that decoding fails. Beautiful Soup parses the page with the HTML parser of the Python standard library; the `<script>` and `<style>` elements are removed, the remaining text is taken with a space between consecutive elements, and every line break and run of blanks is reduced to one space. A page without any readable text produces a warning and a file holding the sentence "No readable text content found."
+The page is requested with a timeout of 15 seconds and downloaded in pieces of 8 KiB, with a progress bar drawn by `tqdm` (with the total size when the server announces it). The bytes are decoded with the character set that the server declares in its `Content-Type` header; without one, with the character set that the page declares in a `<meta>` element of its first 16 KiB; without either, as UTF-8 when the bytes are valid UTF-8, and otherwise as Windows-1252. A declared character set that is unknown or does not decode the page is passed over for the next choice, and the script prints the one it used. Beautiful Soup parses the page with the HTML parser of the Python standard library; the `<script>` and `<style>` elements are removed, the remaining text is taken with a space between consecutive elements, and every line break and run of blanks is reduced to one space. A page without any readable text produces a warning and a file holding the sentence "No readable text content found."
 
-Two limits follow from this design. The script reads the page that the server sends and runs none of its JavaScript, so the text of a page that builds its content in the browser is missing. A page whose server declares no character set is decoded as ISO-8859-1, the default that `requests` applies to text in that case, so that the accented letters of such a page written in UTF-8 come out garbled.
+One limit follows from this design: the script reads the page that the server sends and runs none of its JavaScript, so the text of a page that builds its content in the browser is missing. Version 1.0.0 decoded a page whose server declares no character set as ISO-8859-1, the default that `requests` applies to text in that case, so that the accented letters of such a page written in UTF-8 came out garbled; version 1.0.1 reads the character set as described above.
 
 ## Messages and exit status
 
-The script prints what it is doing (the address, the parsing, the saving) and ends with "Successfully saved text from URL to FILE." and the exit status 0. When something fails it prints one line and exits with the status 1; with the wrong number of arguments it prints its usage.
+The script prints what it is doing (the address, the character set of the page, the parsing, the saving) and ends with "Successfully saved text from URL to FILE." and the exit status 0. When something fails it prints one line and exits with the status 1; with the wrong number of arguments it prints its usage.
 
 | Situation | Message |
 | --- | --- |

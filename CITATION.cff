@@ -10,7 +10,7 @@ authors:
     orcid: "https://orcid.org/0000-0001-5247-2788"
 repository-code: "https://github.com/dutykh/web2txt"
 license: LGPL-3.0-only
-version: 1.0.0
+version: 1.0.1
 date-released: "2026-11-15"
 keywords:
   - python
